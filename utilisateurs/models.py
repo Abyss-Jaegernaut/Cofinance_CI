@@ -1,7 +1,8 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from core.models import BaseModel
 
-class Utilisateur(AbstractUser):
+class Utilisateur(AbstractUser, BaseModel):
     ROLE_CHOICES = (
         ('CLIENT', 'Client',),
         ('AGENT_TERRAIN', 'Agent de terrain'),
