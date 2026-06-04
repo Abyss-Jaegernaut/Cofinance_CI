@@ -7,6 +7,7 @@ class DemandeCredit(BaseModel):
         ('SOUMISE', 'Soumise'),
         ('EN_ANALYSE', 'En analyse'),
         ('APPROUVEE', 'Approuvée'),
+        ('REJETEE', 'Rejetée'),
         ('DECAISSEE', 'Décaissée'),
     )
 
