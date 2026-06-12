@@ -11,4 +11,4 @@ class SouscriptionAssuranceSerializer(serializers.ModelSerializer):
     class Meta:
         model = SouscriptionAssurance
         fields = ['id', 'client', 'produit', 'date_debut', 'date_fin', 'statut', 'created_at', 'updated_at']
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'client', 'date_debut', 'date_fin', 'statut', 'created_at', 'updated_at']

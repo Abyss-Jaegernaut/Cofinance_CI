@@ -1,0 +1,664 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cofinance</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=2.1">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- ========== AUTHENTICATION CONTAINER ========== -->
+    <div id="auth-container" class="auth-container">
+        <div class="auth-wrapper" id="auth-wrapper">
+            <!-- REGISTER VIEW (Left side initially hidden by overflow) -->
+            <div class="form-container sign-up-container">
+                <form id="register-form" class="auth-form">
+                    <h2>Inscription</h2>
+                    <p class="auth-subtitle">Rejoignez COFINANCE</p>
+                    
+                    <div class="input-group">
+                        <input type="text" id="reg-username" placeholder="Nom d'utilisateur" required>
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <div style="display:flex; gap:10px; width: 100%;">
+                        <div class="input-group" style="flex:1;">
+                            <input type="text" id="reg-firstname" placeholder="Prénom" required>
+                        </div>
+                        <div class="input-group" style="flex:1;">
+                            <input type="text" id="reg-lastname" placeholder="Nom" required>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <input type="email" id="reg-email" placeholder="Adresse email" required>
+                        <i class="fa-solid fa-envelope"></i>
+                    </div>
+                    <div class="input-group">
+                        <input type="password" id="reg-password" placeholder="Mot de passe" required>
+                        <i class="fa-solid fa-lock"></i>
+                        <i class="fa-solid fa-eye password-toggle" onclick="togglePassword('reg-password', this)"></i>
+                    </div>
+                    <button type="submit" class="btn-primary" style="margin-top: 10px;">
+                        <span id="register-text">Créer mon compte</span>
+                        <i class="fa-solid fa-circle-notch fa-spin hidden" id="register-spinner"></i>
+                    </button>
+                    <!-- Mobile only link -->
+                    <p class="mobile-switch">Déjà un compte ? <a href="#" id="mobile-signIn">Se connecter</a></p>
+                </form>
+            </div>
+
+            <!-- LOGIN VIEW -->
+            <div class="form-container sign-in-container">
+                <form id="login-form" class="auth-form">
+                    <h2>COFINANCE</h2>
+                    <p class="auth-subtitle">Accédez à votre espace sécurisé</p>
+                    
+                    <div class="input-group">
+                        <input type="text" id="username" placeholder="Nom d'utilisateur" required>
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <div class="input-group">
+                        <input type="password" id="password" placeholder="Mot de passe" required>
+                        <i class="fa-solid fa-lock"></i>
+                        <i class="fa-solid fa-eye password-toggle" onclick="togglePassword('password', this)"></i>
+                    </div>
+                    <button type="submit" class="btn-primary">
+                        <span id="login-text">Se connecter</span>
+                        <i class="fa-solid fa-circle-notch fa-spin hidden" id="login-spinner"></i>
+                    </button>
+                    <!-- Mobile only link -->
+                    <p class="mobile-switch">Nouveau client ? <a href="#" id="mobile-signUp">Créer un compte</a></p>
+                </form>
+            </div>
+
+            <!-- OVERLAY CONTAINER FOR SLIDING -->
+            <div class="overlay-container">
+                <div class="overlay">
+                    <div class="overlay-panel overlay-left">
+                        <h2>Content de vous revoir !</h2>
+                        <p>Restez connecté avec nous en vous connectant à votre compte</p>
+                        <button class="btn-ghost" id="signInSlide">Se connecter</button>
+                    </div>
+                    <div class="overlay-panel overlay-right">
+                        <h2>Nouveau ici ?</h2>
+                        <p>Inscrivez-vous et commencez votre aventure financière avec nous</p>
+                        <button class="btn-ghost" id="signUpSlide">S'inscrire</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== MAIN APP CONTAINER ========== -->
+    <div id="app-container" class="app-layout hidden">
+        
+        <!-- Mobile Header (Visible only on <768px) -->
+        <div id="mobile-header">
+            <div style="display:flex; align-items:center; gap:12px; font-weight:700; font-size:1.2rem; color:white;">
+                <i class="fa-solid fa-shield-halved" style="color:var(--accent-primary);"></i> COFINANCE
+            </div>
+            <button onclick="document.querySelector('.sidebar').classList.add('mobile-active')" style="background:transparent; border:none; color:white; font-size:1.5rem; cursor:pointer;">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+        </div>
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="brand" style="flex-direction:column; align-items:flex-start; gap:6px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; width:100%;">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <div class="brand-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                        <span class="brand-text">COFINANCE</span>
+                    </div>
+                    <button class="sidebar-toggle" onclick="toggleSidebar()" style="background:rgba(255,255,255,0.05); border:1px solid var(--border-color); color:var(--text-secondary); width:32px; height:32px; border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.3s; flex-shrink:0;" title="Réduire"><i class="fa-solid fa-bars"></i></button>
+                    <button class="mobile-sidebar-close" onclick="document.querySelector('.sidebar').classList.remove('mobile-active')" style="display:none;"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div id="workspace-badge" class="nav-text" style="font-size:0.68rem; font-weight:700; letter-spacing:1px; padding:3px 8px; border-radius:4px; background:var(--bg-card); color:var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;">ESPACE CLIENT</div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-label">Principal</div>
+                <a href="#" class="nav-item active" onclick="switchTab('dashboard')" id="nav-dashboard">
+                    <i class="fa-solid fa-chart-pie"></i> <span class="nav-text">Vue d'ensemble</span>
+                </a>
+                <a href="#" class="nav-item" onclick="switchTab('credits')" id="nav-credits">
+                    <i class="fa-solid fa-coins"></i> <span class="nav-text" id="label-credits">Mes Crédits</span>
+                </a>
+                <a href="#" class="nav-item" onclick="switchTab('remboursements')" id="nav-remboursements">
+                    <i class="fa-solid fa-file-invoice-dollar"></i> <span class="nav-text">Remboursements</span>
+                </a>
+                <a href="#" class="nav-item" onclick="switchTab('assurances')" id="nav-assurances">
+                    <i class="fa-solid fa-shield-heart"></i> <span class="nav-text">Assurances</span>
+                </a>
+                <a href="#" class="nav-item" onclick="switchTab('chat')" id="nav-chat" style="position:relative;">
+                    <i class="fa-solid fa-headset"></i> <span class="nav-text">Support</span>
+                    <span id="unread-badge" style="display:none; position:absolute; right:15px; top:50%; transform:translateY(-50%); background:var(--accent-danger); color:white; border-radius:12px; font-size:0.7rem; padding:2px 6px; font-weight:bold;">0</span>
+                </a>
+                <a href="#" class="nav-item" onclick="switchTab('admin')" id="nav-admin" style="display: none;">
+                    <i class="fa-solid fa-users-gear"></i> <span class="nav-text">Administration</span>
+                </a>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-label">Personnel</div>
+                <a href="#" class="nav-item" onclick="switchTab('profile')" id="nav-profile">
+                    <i class="fa-solid fa-user"></i> <span class="nav-text">Mon Profil</span>
+                </a>
+                <a href="#" class="nav-item" onclick="switchTab('settings')" id="nav-settings">
+                    <i class="fa-solid fa-gear"></i> <span class="nav-text">Paramètres</span>
+                </a>
+            </div>
+
+            <div style="margin-top:auto; padding:1rem;">
+                <div style="position:relative; margin-bottom:1rem;">
+                    <button class="btn btn-secondary" style="width:100%; display:flex; justify-content:space-between; align-items:center;" onclick="toggleNotifications(event)">
+                        <span><i class="fa-solid fa-bell"></i> <span class="nav-text">Notifications</span></span>
+                        <span id="notif-badge" style="background:var(--accent-warning); color:black; border-radius:50%; width:20px; height:20px; display:flex; justify-content:center; align-items:center; font-size:0.75rem; font-weight:bold; display:none;">0</span>
+                    </button>
+
+                </div>
+                
+                <div class="user-profile" style="margin-top:0;">
+                    <div class="user-badge" onclick="switchTab('profile')" style="cursor: pointer;">
+                        <div class="avatar" id="user-avatar-initials">U</div>
+                        <div class="info user-details" style="overflow:hidden;">
+                            <div class="name" id="user-name" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Utilisateur</div>
+                            <div class="role" id="user-role" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Role</div>
+                        </div>
+                    </div>
+
+                    <button class="btn-secondary" onclick="logout()" style="padding: 8px 15px;">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+            
+            <!-- DASHBOARD VIEW -->
+            <section id="content-dashboard" class="active-view">
+                <div class="page-header">
+                    <div>
+                        <h1>Tableau de bord</h1>
+                        <p id="dashboard-subtitle">Bienvenue sur votre espace financier.</p>
+                    </div>
+                </div>
+                
+                <div class="stats-grid" id="dashboard-stats">
+                    <!-- Injected via JS -->
+                </div>
+
+                <!-- Admin only: table des dossiers urgents -->
+                <div class="panel" id="admin-urgent-panel" style="display:none; margin-bottom:2rem;">
+                    <div class="panel-header">
+                        <h2><i class="fa-solid fa-triangle-exclamation" style="color:var(--accent-warning);"></i> Dossiers en attente d'action</h2>
+                        <button class="btn-secondary" style="padding:0.5rem 1rem; font-size:0.85rem;" onclick="switchTab('credits')">Voir tous &rarr;</button>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Réf.</th>
+                                    <th>Client</th>
+                                    <th>Montant</th>
+                                    <th>Statut</th>
+                                    <th>Soumis le</th>
+                                    <th>Action rapide</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-urgent-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="panel chart-panel" style="padding: 1.5rem; background: var(--bg-card); border-radius: 16px;">
+                    <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center;">
+                        <h2 id="chart-title">Évolution des crédits</h2>
+                        <div class="chart-filters" style="display:flex; gap:0.5rem;">
+                            <button class="btn btn-secondary filter-btn active" data-days="7" onclick="setDashboardFilter(7)" style="padding:0.4rem 0.8rem; font-size:0.8rem; border-radius:6px; cursor:pointer;">7 Jours</button>
+                            <button class="btn btn-secondary filter-btn" data-days="30" onclick="setDashboardFilter(30)" style="padding:0.4rem 0.8rem; font-size:0.8rem; border-radius:6px; cursor:pointer;">1 Mois</button>
+                            <button class="btn btn-secondary filter-btn" data-days="365" onclick="setDashboardFilter(365)" style="padding:0.4rem 0.8rem; font-size:0.8rem; border-radius:6px; cursor:pointer;">1 An</button>
+                        </div>
+                    </div>
+                    <div style="position: relative; height: 280px; width: 100%;">
+                        <canvas id="dashboard-chart"></canvas>
+                    </div>
+                </div>
+
+                <div class="panel" style="margin-top:2rem;">
+                    <div class="panel-header">
+                        <h2>Activité récente</h2>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr id="recent-head">
+                                    <th>Réf.</th>
+                                    <th>Montant</th>
+                                    <th>Statut</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-activity-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CREDITS VIEW -->
+            <section id="content-credits" class="hidden">
+                <div class="page-header">
+                    <div>
+                        <h1 id="credits-page-title">Mes Demandes</h1>
+                        <p id="credits-page-subtitle">Gérez vos financements actuels</p>
+                    </div>
+                    <button id="btn-new-credit" class="btn-primary" style="width: auto;" onclick="openModal('modal-new-credit')">
+                        <i class="fa-solid fa-plus"></i> Nouvelle demande
+                    </button>
+                </div>
+                
+                <div class="panel">
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr id="credits-table-head">
+                                    <th>Réf.</th>
+                                    <th>Client</th>
+                                    <th>Montant</th>
+                                    <th>Durée</th>
+                                    <th>Statut</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="credits-table-body">
+                                <tr><td colspan="6" style="text-align:center; padding: 2rem;">Chargement...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- REMBOURSEMENTS VIEW -->
+            <section id="content-remboursements" class="hidden">
+                <div class="page-header">
+                    <div>
+                        <h1>Échéanciers & Paiements</h1>
+                        <p>Gérez vos remboursements</p>
+                    </div>
+                </div>
+                <div class="panel">
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr id="remb-table-head">
+                                    <th>Crédit (Réf.)</th>
+                                    <th>Client</th>
+                                    <th>Date d'échéance</th>
+                                    <th>Montant</th>
+                                    <th>Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody id="remb-table-body">
+                                <tr><td colspan="5" style="text-align:center; padding: 2rem;">Chargement...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ASSURANCES VIEW -->
+            <section id="content-assurances" class="hidden">
+                <div class="page-header">
+                    <div>
+                        <h1>Assurances</h1>
+                        <p>Nos produits et vos souscriptions</p>
+                    </div>
+                </div>
+                <div class="stats-grid" id="assurances-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+                    <!-- Cards will be generated here -->
+                </div>
+                <div class="panel" style="margin-top:2rem;">
+                    <div class="panel-header">
+                        <h2>Souscriptions Actives</h2>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Produit</th>
+                                    <th>Client</th>
+                                    <th>Date Souscription</th>
+                                    <th>Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody id="assur-table-body">
+                                <tr><td colspan="4" style="text-align:center; padding: 2rem;">Chargement...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ADMIN VIEW -->
+            <section id="content-admin" class="hidden">
+                <div class="page-header">
+                    <div>
+                        <h1>Administration</h1>
+                        <p>Vue globale et Tableau de bord</p>
+                    </div>
+                </div>
+
+                <!-- Admin Dashboard KPI -->
+                <div class="dashboard-stats" style="margin-bottom: 2rem;">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:rgba(41,121,255,0.12); color:#2979FF;"><i class="fa-solid fa-scale-balanced"></i></div>
+                        <div class="stat-info"><h3>Recouvrement</h3><div class="value" id="admin-kpi-recouvrement">0%</div></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:rgba(0,230,118,0.12); color:#00E676;"><i class="fa-solid fa-shield-heart"></i></div>
+                        <div class="stat-info"><h3>Assurances Actives</h3><div class="value" id="admin-kpi-assurances">0</div></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:rgba(255,145,0,0.12); color:#FF9100;"><i class="fa-solid fa-headset"></i></div>
+                        <div class="stat-info"><h3>Support Ouvert</h3><div class="value" id="admin-kpi-support">0</div></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:rgba(255,23,68,0.12); color:#FF1744;"><i class="fa-solid fa-money-bill-wave"></i></div>
+                        <div class="stat-info"><h3>Reste à recouvrer</h3><div class="value" id="admin-kpi-reste">0 FCFA</div></div>
+                    </div>
+                </div>
+
+                <div class="panel" style="margin-bottom: 2rem;">
+                    <h2 style="margin-bottom: 1rem;">Répartition des demandes de crédit</h2>
+                    <div class="chart-container" style="position: relative; height:300px; width:100%;">
+                        <canvas id="adminDashboardChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Gestion des utilisateurs -->
+                <div class="panel">
+                    <h2 style="margin-bottom: 1rem;">Gestion des Accès</h2>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Utilisateur</th>
+                                    <th>Rôle Actuel</th>
+                                    <th>Téléphone</th>
+                                    <th>Inscrit le</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-table-body">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PROFILE VIEW -->
+            <section id="content-profile" class="hidden">
+                <div class="profile-container">
+                    <div class="glass profile-header">
+                        <div class="profile-avatar" id="profile-avatar-big"><i class="fa-solid fa-user"></i></div>
+                        <div class="profile-info">
+                            <h3 id="profile-name">Chargement...</h3>
+                            <p id="profile-role-desc">Connecté</p>
+                            <span class="profile-badge" id="profile-badge">...</span>
+                        </div>
+                    </div>
+                    
+                    <div class="profile-tabs" style="display:flex; gap:1rem; margin-bottom:1rem; margin-top:2rem;">
+                        <button class="btn btn-primary" id="tab-info" onclick="switchProfileTab('info')">Informations</button>
+                        <button class="btn btn-secondary" id="tab-stats" onclick="switchProfileTab('stats')">Statistiques</button>
+                    </div>
+
+                    <div id="profile-tab-info" class="glass" style="padding:24px;">
+                        <h4 style="margin-bottom:16px;">Modifier les informations</h4>
+                        <form id="profile-form">
+                            <div class="profile-grid">
+                                <div class="form-group">
+                                    <label>Prénom</label>
+                                    <input type="text" id="prof-first" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Nom</label>
+                                    <input type="text" id="prof-last" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Email</label>
+                                    <input type="email" id="prof-email">
+                                </div>
+                                <div class="form-group">
+                                    <label>Téléphone</label>
+                                    <input type="text" id="prof-phone">
+                                </div>
+                                <div class="form-group" style="grid-column: 1 / -1;">
+                                    <label>Adresse postale</label>
+                                    <input type="text" id="prof-address">
+                                </div>
+                            </div>
+                            <div class="profile-actions" style="margin-top: 15px;">
+                                <button type="submit" class="btn-primary" style="width: auto;"><i class="fa-solid fa-save"></i> Enregistrer</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div id="profile-tab-stats" class="hidden">
+                        <div class="profile-stats">
+                            <div class="glass profile-stat"><i class="fa-solid fa-coins txt-green"></i><p>Crédits demandés</p><h4 id="prof-nb-credits">0</h4></div>
+                            <div class="glass profile-stat"><i class="fa-solid fa-check txt-blue"></i><p>Crédits approuvés</p><h4 id="prof-nb-approved">0</h4></div>
+                            <div class="glass profile-stat"><i class="fa-solid fa-clock txt-red"></i><p>En attente</p><h4 id="prof-nb-pending">0</h4></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CHAT VIEW -->
+            <section id="content-chat" class="hidden" style="height: calc(100vh); display: flex; flex-direction: column; margin: -2rem; padding: 2rem; box-sizing: border-box;">
+                <div class="page-header" style="margin-bottom: 1rem;">
+                    <div>
+                        <h1>Support Client</h1>
+                        <p>Discussion en temps réel</p>
+                    </div>
+                </div>
+                <div class="glass chat-glass-container" style="flex: 1; width: 100%; display:flex; overflow:hidden; border-radius:16px; background:rgba(15, 23, 42, 0.6); backdrop-filter:blur(10px); box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+                    <!-- Liste des conversations -->
+                    <div class="chat-list-pane" style="width:320px; border-right:1px solid rgba(255,255,255,0.05); display:flex; flex-direction:column; background:rgba(0,0,0,0.2);">
+                        <div style="padding:1.5rem; border-bottom:1px solid rgba(255,255,255,0.05); display:flex; justify-content:space-between; align-items:center;">
+                            <h3 style="font-size:1.2rem; font-weight:600; margin:0;">Discussions</h3>
+                            <button id="btn-new-chat" style="background:var(--accent-primary); color:white; border:none; width:36px; height:36px; border-radius:50%; cursor:pointer; box-shadow:0 4px 10px rgba(41,121,255,0.3); transition:all 0.3s;" title="Nouvelle discussion" onclick="document.getElementById('new-chat-form').style.display = document.getElementById('new-chat-form').style.display === 'none' ? 'block' : 'none';" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'"><i class="fa-solid fa-plus"></i></button>
+                        </div>
+                        <div id="new-chat-form" style="display:none; padding:10px; border-bottom:1px solid rgba(255,255,255,0.05); background:rgba(255,255,255,0.02);">
+                            <input type="text" id="new-chat-input" placeholder="Sujet de la discussion..." style="width:100%; padding:8px 12px; border-radius:6px; border:1px solid var(--border-color); background:transparent; color:white; margin-bottom:8px; outline:none;" onkeypress="if(event.key === 'Enter') startNewChat()">
+                            <button onclick="startNewChat()" style="width:100%; padding:8px; background:var(--accent-primary); color:white; border:none; border-radius:6px; cursor:pointer; font-weight:600;">Créer</button>
+                        </div>
+                        <div id="chat-list" style="flex:1; overflow-y:auto; padding:0.5rem; display:flex; flex-direction:column; gap:4px;">
+                            <!-- Injected -->
+                        </div>
+                    </div>
+                    <!-- Zone de messages -->
+                    <div class="chat-main-pane" style="flex:1; display:flex; flex-direction:column; position:relative; background:rgba(15,23,42,0.4);">
+                        <div id="chat-header" style="padding:1.5rem; border-bottom:1px solid rgba(255,255,255,0.05); display:flex; align-items:center; gap:15px; background:rgba(0,0,0,0.1);">
+                            <div style="width:40px; height:40px; border-radius:50%; background:var(--accent-secondary); display:flex; align-items:center; justify-content:center; color:white; font-weight:bold;"><i class="fa-solid fa-comments"></i></div>
+                            <div>
+                                <h3 style="margin:0; font-size:1.1rem; font-weight:600;">Sélectionnez une discussion</h3>
+                                <small style="color:var(--text-secondary);">Support en ligne</small>
+                            </div>
+                        </div>
+                        <div id="chat-messages" style="flex:1; overflow-y:auto; padding:1.5rem; display:flex; flex-direction:column; gap:15px;">
+                            <!-- Messages inyected -->
+                        </div>
+                        <div style="padding:1.5rem; border-top:1px solid rgba(255,255,255,0.05); background:rgba(0,0,0,0.2);">
+                            <div style="display:flex; gap:10px; background:rgba(255,255,255,0.03); padding:8px; border-radius:30px; border:1px solid rgba(255,255,255,0.1);">
+                                <input type="text" id="chat-input" placeholder="Écrivez votre message..." style="flex:1; padding:0.8rem 1.2rem; border-radius:20px; border:none; background:transparent; color:white; outline:none; font-size:0.95rem;" disabled>
+                                <button id="chat-send-btn" style="width:45px; height:45px; padding:0; border-radius:50%; background:var(--accent-primary); border:none; color:white; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.3s;" onclick="sendChatMessage()" disabled onmouseover="this.style.background='#1c56b8'" onmouseout="this.style.background='var(--accent-primary)'"><i class="fa-solid fa-paper-plane"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SETTINGS VIEW -->
+            <section id="content-settings" class="hidden">
+                <div class="settings-container">
+                    <div class="settings-section">
+                        <div class="settings-section-title">Général</div>
+                        <div class="glass">
+                            <div class="setting-row"><div class="setting-left"><div class="setting-icon"><i class="fa-solid fa-palette" style="color:var(--accent-secondary)"></i></div><div class="setting-label"><strong>Thème de l'application</strong><small>Par défaut Dark Premium</small></div></div><span class="setting-value">Dark</span></div>
+                            <div class="setting-row"><div class="setting-left"><div class="setting-icon"><i class="fa-solid fa-language" style="color:var(--accent-primary)"></i></div><div class="setting-label"><strong>Langue</strong><small>Langue de l'interface</small></div></div><span class="setting-value">Français</span></div>
+                            <div class="setting-row"><div class="setting-left"><div class="setting-icon"><i class="fa-solid fa-coins" style="color:var(--accent-warning)"></i></div><div class="setting-label"><strong>Devise</strong><small>Monnaie utilisée</small></div></div><span class="setting-value">FCFA</span></div>
+                        </div>
+                    </div>
+                    <div class="settings-section">
+                        <div class="settings-section-title">Notifications</div>
+                        <div class="glass">
+                            <div class="setting-row"><div class="setting-left"><div class="setting-icon"><i class="fa-solid fa-bell" style="color:var(--accent-warning)"></i></div><div class="setting-label"><strong>Notifications</strong><small>Alertes temps réel</small></div></div><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+                            <div class="setting-row"><div class="setting-left"><div class="setting-icon"><i class="fa-solid fa-envelope" style="color:var(--accent-secondary)"></i></div><div class="setting-label"><strong>Rapports email</strong><small>Résumé des demandes</small></div></div><label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- ========== MODALS ========== -->
+    
+    <!-- New Credit Modal -->
+    <div id="modal-new-credit" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Nouvelle demande de crédit</h3>
+                <button class="modal-close" onclick="closeModal('modal-new-credit')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="form-new-credit">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Montant souhaité (FCFA)</label>
+                        <input type="number" id="new-montant" min="10000" step="5000" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Durée (mois)</label>
+                        <select id="new-duree" required>
+                            <option value="3">3 mois</option>
+                            <option value="6">6 mois</option>
+                            <option value="12">12 mois</option>
+                            <option value="24">24 mois</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Motif de la demande</label>
+                        <input type="text" id="new-motif" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Justificatif (Optionnel)</label>
+                        <input type="file" id="new-justificatif" accept=".pdf,.png,.jpg,.jpeg" style="background: rgba(0,0,0,0.2); padding: 0.5rem; border-radius: 8px; width: 100%; color: var(--text-secondary); border: 1px dashed var(--border-color);">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="closeModal('modal-new-credit')">Annuler</button>
+                    <button type="submit" class="btn-primary" style="width: auto;">Soumettre</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Action Credit Modal (Approve/Reject) -->
+    <div id="modal-action-credit" class="modal-overlay">
+        <div class="modal-content glass">
+            <h2 id="action-modal-title">Action</h2>
+            <p id="action-modal-text">Êtes-vous sûr ?</p>
+            <input type="hidden" id="action-credit-id">
+            <input type="hidden" id="action-type">
+            <div class="form-group" style="margin-top:1rem;">
+                <label>Note de décision (Optionnelle)</label>
+                <textarea id="action-note" rows="3" placeholder="Justification..."></textarea>
+            </div>
+            <div class="modal-actions" style="display:flex; justify-content:center; gap:15px; width:100%;">
+                <button class="btn btn-secondary" style="flex:1; width:auto;" onclick="closeModal('modal-action-credit')">Annuler</button>
+                <button class="btn btn-primary" id="btn-confirm-action" style="flex:1; width:auto; justify-content:center;" onclick="confirmAction()">Confirmer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications Dropdown (Moved out of sidebar to avoid clipping) -->
+    <div id="notif-dropdown" class="glass hidden" style="position:fixed; width:400px; max-height:450px; overflow-y:auto; border-radius:16px; z-index:9999; box-shadow:0 15px 40px rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.1);">
+        <div style="padding:1rem 1.2rem; border-bottom:1px solid rgba(255,255,255,0.05); display:flex; justify-content:space-between; align-items:center; background: rgba(0,0,0,0.3); backdrop-filter: blur(10px);">
+            <h4 style="margin:0; font-size:1.05rem; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-bell" style="color:var(--accent-warning);"></i> Vos alertes</h4>
+            <button class="btn-action-icon" onclick="toggleNotifications()" style="color:var(--text-secondary);"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="notif-list" style="padding:0.5rem; display:flex; flex-direction:column; gap:6px;">
+            <!-- Injected -->
+        </div>
+    </div>
+
+    <!-- DETAIL MODAL -->
+    <div id="modal-detail-credit" class="modal">
+        <div class="modal-content glass" style="max-width:680px; width:95%; padding:0;">
+            <!-- Header -->
+            <div style="padding:1.5rem 2rem; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
+                <h2 id="detail-modal-title" style="font-size:1.2rem; font-weight:700;">Détails du Crédit</h2>
+                <button onclick="closeModal('modal-detail-credit')" style="background:rgba(255,255,255,0.05); border:1px solid var(--border-color); color:var(--text-primary); cursor:pointer; width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <!-- Body -->
+            <div id="detail-modal-body" style="padding:1.5rem 2rem; font-size:0.95rem; line-height:1.7; max-height:65vh; overflow-y:auto;">
+                <!-- Injected via JS -->
+            </div>
+            <!-- Footer actions -->
+            <div class="modal-actions" style="padding:1rem 2rem; border-top:1px solid var(--border-color); background:rgba(0,0,0,0.2); border-radius:0 0 20px 20px;" id="detail-modal-actions">
+                <!-- Actions injected via JS -->
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <!-- PAIEMENT MODAL -->
+    <div id="modal-paiement" class="modal-overlay">
+        <div class="modal-content glass">
+            <h2>Enregistrer un paiement</h2>
+            <p style="color:var(--text-secondary); margin-bottom:1.5rem;">Confirmez la réception des fonds pour solder cette échéance.</p>
+            <input type="hidden" id="paiement-echeancier-id">
+            <div class="form-group">
+                <label>Montant reçu (FCFA)</label>
+                <input type="number" id="paiement-montant" required>
+            </div>
+            <div class="modal-actions" style="display:flex; justify-content:center; gap:15px; width:100%;">
+                <button class="btn btn-secondary" style="flex:1; width:auto;" onclick="closeModal('modal-paiement')">Annuler</button>
+                <button class="btn btn-primary" style="flex:1; width:auto; justify-content:center;" onclick="submitPaiement()">Valider le paiement</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ROLE MODAL -->
+    <div id="modal-role" class="modal-overlay">
+        <div class="modal-content glass">
+            <h2>Modifier le rôle</h2>
+            <p style="color:var(--text-secondary); margin-bottom:1.5rem;">Changer les autorisations de cet utilisateur.</p>
+            <input type="hidden" id="role-user-id">
+            <div class="form-group">
+                <label>Nouveau rôle</label>
+                <select id="role-select">
+                    <option value="CLIENT">Client</option>
+                    <option value="AGENT_TERRAIN">Agent de terrain</option>
+                    <option value="ADMINISTRATEUR">Administrateur</option>
+                </select>
+            </div>
+            <div class="modal-actions" style="display:flex; justify-content:center; gap:15px; width:100%;">
+                <button class="btn btn-secondary" style="flex:1; width:auto;" onclick="closeModal('modal-role')">Annuler</button>
+                <button class="btn btn-primary" style="flex:1; width:auto; justify-content:center;" onclick="submitRoleChange()">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{% static 'js/api.js' %}?v=2.3"></script>
+    <script src="{% static 'js/chat.js' %}?v=2.3"></script>
+    <script src="{% static 'js/app.js' %}?v=2.3"></script>
+</body>
+</html>

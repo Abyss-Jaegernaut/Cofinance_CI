@@ -22,6 +22,7 @@ class Conversation(BaseModel):
         related_name='conversations_agent',
         verbose_name="Agent assigné"
     )
+    sujet = models.CharField(max_length=255, default='Demande de support', verbose_name="Sujet")
     statut = models.CharField(max_length=20, choices=STATUTS_CONVERSATION, default='OUVERTE', verbose_name="Statut")
 
     class Meta:
@@ -47,6 +48,7 @@ class Message(BaseModel):
         verbose_name="Expéditeur"
     )
     contenu = models.TextField(verbose_name="Contenu du message")
+    lu = models.BooleanField(default=False, verbose_name="Lu")
 
     class Meta:
         verbose_name = "Message"

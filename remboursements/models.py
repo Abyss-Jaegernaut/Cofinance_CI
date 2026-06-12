@@ -19,6 +19,7 @@ class Echeancier(BaseModel):
     date_echeance = models.DateField(verbose_name="Date d'échéance")
     montant_attendu = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Montant attendu (FCFA)")
     statut = models.CharField(max_length=20, choices=STATUTS_ECHEANCE, default='EN_ATTENTE', verbose_name="Statut")
+    penalite_retard = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="Pénalité de retard")
 
     class Meta:
         verbose_name = "Échéancier"

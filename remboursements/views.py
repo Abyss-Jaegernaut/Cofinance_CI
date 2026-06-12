@@ -10,8 +10,11 @@ class RoleBasedPermission(permissions.BasePermission):
         if not request.user or not request.user.is_authenticated:
             return False
         
-        # Clients can only read
+        # Clients can only read, BUT they can POST to make a payment
         if request.user.role == 'CLIENT' and request.method not in permissions.SAFE_METHODS:
+            # Allow POST for PaiementViewSet (basename='paiement' or checking view class)
+            if hasattr(view, 'get_serializer_class') and 'Paiement' in view.get_serializer_class().__name__ and request.method == 'POST':
+                return True
             return False
             
         return True
@@ -37,11 +40,19 @@ class PaiementViewSet(viewsets.ModelViewSet):
         return Paiement.objects.filter(echeancier__demande_credit__client=user).order_by('-created_at')
 
     def perform_create(self, serializer):
-        # L'agent est automatiquement celui qui fait la requête
-        paiement = serializer.save(agent_validateur=self.request.user)
+        # L'agent est automatiquement celui qui fait la requête si ce n'est pas un client
+        agent = self.request.user if self.request.user.role != 'CLIENT' else None
+        paiement = serializer.save(agent_validateur=agent)
         
         # Mise à jour automatique de l'échéancier lié
         echeancier = paiement.echeancier
         echeancier.statut = 'PAYE'
         echeancier.save()
+
+        from notifications.models import Notification
+        Notification.objects.create(
+            utilisateur=echeancier.demande_credit.client,
+            type_alerte='PAIEMENT',
+            message=f"Un paiement de {paiement.montant_paye} FCFA a été enregistré avec succès pour votre crédit."
+        )
 

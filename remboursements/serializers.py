@@ -4,8 +4,8 @@ from .models import Echeancier, Paiement
 class EcheancierSerializer(serializers.ModelSerializer):
     class Meta:
         model = Echeancier
-        fields = ['id', 'demande_credit', 'date_echeance', 'montant_attendu', 'statut', 'created_at', 'updated_at']
-        read_only_fields = ['id', 'statut', 'created_at', 'updated_at']
+        fields = ['id', 'demande_credit', 'date_echeance', 'montant_attendu', 'penalite_retard', 'statut', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']
 
 class PaiementSerializer(serializers.ModelSerializer):
     class Meta:
